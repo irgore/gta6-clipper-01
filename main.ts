@@ -1,6 +1,16 @@
+import { existsSync, mkdirSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { mkdir } from "node:fs/promises";
 
-await mkdir("/output", { recursive: true });
-execSync("bash clip.sh /output", { stdio: "inherit" });
-console.log("clip.mp4 → /output/clip.mp4");
+const OUT = process.env.OUTPUT_DIR || "/output";
+if (!existsSync(OUT)) mkdirSync(OUT, { recursive: true });
+
+console.log("Clipping GTA 6 trailer...");
+execSync("bash clip.sh", { stdio: "inherit", env: { ...process.env, OUTPUT_DIR: OUT } });
+
+const clip = `${OUT}/clip.mp4`;
+if (existsSync(clip)) {
+  console.log(`Clip generated: ${clip}`);
+} else {
+  console.error("ERROR: clip.mp4 not found (yt-dlp may have failed, check network)");
+  process.exit(1);
+}
